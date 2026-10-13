@@ -1,0 +1,30 @@
+services:
+  db:
+    image: docker.io/library/postgres:16
+    environment:
+      POSTGRES_USER: rshb_stipa
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local_demo_password}
+      POSTGRES_DB: rshb_stipa_development
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  web:
+    build: .
+    ports:
+      - "127.0.0.1:${PORT:-3000}:3000"
+    environment:
+      RAILS_ENV: development
+      DATABASE_URL: postgresql://rshb_stipa:${POSTGRES_PASSWORD:-local_demo_password}@db:5432/rshb_stipa_development
+      TEST_DATABASE_URL: postgresql://rshb_stipa:${POSTGRES_PASSWORD:-local_demo_password}@db:5432/rshb_stipa_test
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

@@ -1,0 +1,75 @@
+# Demonstration rules, not validated marketing norms. All money is RUB kopecks.
+reference_date: "2026-10-13"
+window_days: 365
+thresholds:
+  recency_days: [30, 90]
+  frequency: [2, 5]
+  monetary_cents: [30000, 100000]
+
+# First matching rule wins. No eligible purchases is handled separately.
+rules:
+  - segment: champions
+    minimum: { r: 3, f: 3, m: 3 }
+  - segment: loyal
+    minimum: { r: 2, f: 3 }
+  - segment: at_risk
+    minimum: { f: 2 }
+    maximum: { r: 1 }
+  - segment: sleeping
+    maximum: { r: 1 }
+  - segment: new_customers
+    minimum: { r: 3 }
+    maximum: { f: 1 }
+  - segment: active
+
+segments:
+  no_purchases:
+    label: Нет покупок в окне
+    reason: В выбранном окне нет завершённых покупок; покупки до окна не учитываются.
+    recommendations: [catalog_introduction]
+  champions:
+    label: Лучшие покупатели
+    reason: Покупки недавние, частые и с высокой суммой по демонстрационным порогам.
+    recommendations: [seasonal_preorder, cross_sell]
+  loyal:
+    label: Постоянные покупатели
+    reason: Покупатель часто заказывал и совершал покупку не более 90 дней назад.
+    recommendations: [repeat_purchase, seasonal_preorder]
+  at_risk:
+    label: Риск ухода
+    reason: В окне было несколько покупок, но последняя была более 90 дней назад.
+    recommendations: [repeat_purchase]
+  sleeping:
+    label: Давно не покупали
+    reason: В окне есть покупка, но она была более 90 дней назад, а заказов меньше двух.
+    recommendations: [repeat_purchase]
+  new_customers:
+    label: Одна недавняя покупка
+    reason: В окне только один заказ, совершённый не более 30 дней назад; это не обязательно первая покупка за всё время.
+    recommendations: [repeat_purchase, cross_sell]
+  active:
+    label: Другие активные покупатели
+    reason: В окне есть завершённые покупки, но покупатель не попал в более приоритетные правила.
+    recommendations: [repeat_purchase, cross_sell]
+
+recommendations:
+  repeat_purchase:
+    title: Предложить повторную покупку
+    reason: Фермеру нужно проверить историю заказов и выбрать реально доступный товар; любимый товар автоматически не определяется.
+    channel: email
+    timing: После проверки согласия и частотного лимита, с учётом интервала между покупками.
+  seasonal_preorder:
+    title: Предложить сезонный предзаказ
+    reason: Идея применима только при наличии у хозяйства сезонного предложения и подтверждённых сроков поставки.
+    channel: email
+    timing: До начала фактического сезона, после проверки согласия и частотного лимита.
+  cross_sell:
+    title: Предложить дополнительный товар
+    reason: Фермер выбирает дополнение из фактического ассортимента; наличие и предпочтения покупателя нужно уточнить.
+    channel: email
+    timing: При следующем подходящем поводе, после проверки согласия и частотного лимита.
+  catalog_introduction:
+    title: Познакомить с актуальным ассортиментом
+    reason: Не утверждать, что покупатель никогда не заказывал; завершённых заказов нет только в выбранном окне.
+    channel: email
+    timing: После проверки контакта, согласия и частотного лимита.

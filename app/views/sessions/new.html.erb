@@ -1,16 +1,16 @@
-<main>
+<main id="main-content" class="page sign-in">
   <h1>Вход фермера</h1>
   <%= tag.p(flash[:alert], role: "alert") if flash[:alert] %>
   <%= form_with url: session_path do |form| %>
     <p>
-      <%= form.label :email_address, "Электронная почта" %><br>
+      <%= form.label :email_address, "Электронная почта" %>
       <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username" %>
     </p>
     <p>
-      <%= form.label :password, "Пароль" %><br>
+      <%= form.label :password, "Пароль" %>
       <%= form.password_field :password, required: true, autocomplete: "current-password", maxlength: 72, size: 24 %>
     </p>
-    <%= form.submit "Войти" %>
+    <%= form.submit "Войти", class: "button button-primary" %>
   <% end %>
   <p>Нет регистрации и восстановления пароля через почту. Доступ готовит владелец локального демо.</p>
   <%= link_to "На стартовую страницу", root_path %>

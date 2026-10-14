@@ -1,0 +1,33 @@
+<% content_for :title, "#{@customer.name} — CRM" %>
+<main id="main-content" class="page">
+  <p class="breadcrumbs"><%= link_to "Обзор базы", crm_path %> / <%= link_to "Покупатели", customers_path %> / Карточка</p>
+  <div class="page-heading"><div><p class="eyebrow">Карточка покупателя · <%= @customer.external_id %></p><h1><%= @customer.name %></h1><p class="muted"><%= @customer.email || "Email не указан" %> · <%= @customer.phone || "Телефон не указан" %></p></div><%= link_to @rfm.segment_label, segment_path(@rfm.segment), class: "badge badge-link" %></div>
+  <%= render "shared/rfm_context" %>
+  <section class="metric-grid" aria-label="RFM покупателя">
+    <article class="metric-card"><p>R · дней после покупки</p><strong data-rfm-recency><%= @rfm.recency_days || "—" %></strong><span>Последняя в окне: <%= crm_time(@rfm.last_order_at) %></span></article>
+    <article class="metric-card"><p>F · заказы в окне</p><strong data-rfm-frequency><%= @rfm.frequency %></strong><span>Балл F: <%= @rfm.f_score %></span></article>
+    <article class="metric-card"><p>M · сумма в окне</p><strong data-rfm-monetary><%= rubles(@rfm.monetary_cents) %></strong><span>Балл M: <%= @rfm.m_score %></span></article>
+  </section>
+  <section class="panel"><h2>Почему этот сегмент</h2><p class="explanation"><%= @rfm.explanation %></p></section>
+  <section aria-labelledby="consents-heading"><div class="section-heading"><h2 id="consents-heading">Согласия по каналам</h2><span class="muted">Только просмотр</span></div><div class="consent-grid">
+    <% Consent::CHANNELS.each do |channel| %>
+      <% consent = @consents[channel] %>
+      <article class="panel" data-consent-channel="<%= channel %>"><h3><%= channel == "email" ? "Email" : "SMS" %></h3>
+        <p class="permission <%= consent&.granted? ? 'permission-yes' : 'permission-no' %>"><%= consent.nil? ? "Согласие не зафиксировано" : consent.granted? ? "Согласие дано" : "Нет согласия" %></p>
+        <p class="muted">Дата состояния: <%= crm_time(consent&.changed_at) %></p>
+        <p class="muted">Контакт: <%= (channel == "email" ? @customer.email : @customer.phone) || "Не указан" %></p>
+      </article>
+    <% end %>
+  </div></section>
+  <aside class="notice">Согласие не означает готовность к отправке: ещё нужны действительный контакт, проверка частоты и подтверждение фермера. Отсутствие согласия — запрет на коммуникацию.</aside>
+  <section aria-labelledby="orders-heading"><div class="section-heading"><h2 id="orders-heading">История заказов</h2><span class="muted">Всего: <%= @total_count %> · все статусы и даты</span></div>
+    <% if @orders.empty? %>
+      <div class="empty-state" data-empty-orders><h3>Заказов пока нет</h3><p>Отсутствующие покупки не считаются нулевой давностью.</p></div>
+    <% else %>
+      <div class="table-wrap" role="region" aria-label="История заказов" tabindex="0"><table><caption class="visually-hidden">Все заказы покупателя, включая не вошедшие в RFM</caption><thead><tr><th scope="col">Заказ</th><th scope="col">Дата UTC</th><th scope="col">Статус</th><th scope="col">Сумма</th></tr></thead><tbody>
+        <% @orders.each do |order| %><tr data-order-id="<%= order.id %>"><td><%= order.external_id %></td><td><%= crm_time(order.ordered_at) %></td><td><span class="badge" data-order-status="<%= order.status %>"><%= order_status_label(order.status) %></span></td><td class="money"><%= rubles(order.total_cents) %></td></tr><% end %>
+      </tbody></table></div>
+      <%= render "shared/pagination", base_path: customer_path(@customer) %>
+    <% end %>
+  </section>
+</main>

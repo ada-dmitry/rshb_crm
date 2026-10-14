@@ -1,0 +1,14 @@
+<% content_for :title, "#{@definition.fetch('label')} — CRM" %>
+<main id="main-content" class="page">
+  <p class="breadcrumbs"><%= link_to "Обзор базы", crm_path %> / Сегмент</p>
+  <div class="page-heading"><div><p class="eyebrow">Сегмент покупателей</p><h1><%= @definition.fetch("label") %></h1><p class="muted"><%= @definition.fetch("reason") %></p></div><div class="segment-total"><strong data-segment-size><%= @segment_size %></strong><span>покупателей</span></div></div>
+  <%= render "shared/rfm_context" %>
+  <div class="segment-actions"><%= link_to "Посмотреть покупателей →", customers_path(segment: @segment), class: "button button-primary" %><button type="button" class="button button-secondary" disabled>Конструктор кампаний — следующий этап</button></div>
+  <% if @segment_size.zero? %><div class="empty-state" data-empty-state><h2>В этом сегменте пока нет покупателей</h2><p>Правила и идеи ниже описывают сегмент, но не означают доступный охват.</p></div><% end %>
+  <section aria-labelledby="proposals-heading"><div class="section-heading"><h2 id="proposals-heading">Идеи следующего действия</h2><span class="muted">Не отправляются автоматически</span></div><div class="proposal-grid">
+    <% @proposals.each do |proposal| %>
+      <article class="proposal-card" data-proposal><span class="eyebrow">Рекомендация · <%= proposal.channel %></span><h3><%= proposal.title %></h3><p><%= proposal.reason %></p><div class="proposal-timing"><strong>Когда:</strong> <%= proposal.timing %></div><p class="confirmation-note">Только после подтверждения фермера</p></article>
+    <% end %>
+  </div></section>
+  <aside class="notice"><strong>Это идеи, а не готовая рассылка.</strong> Согласия и частотные лимиты здесь не проверяются. Ассортимент и сроки нужно подтвердить; эффект не гарантирован.</aside>
+</main>

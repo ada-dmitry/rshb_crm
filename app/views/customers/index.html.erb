@@ -1,0 +1,26 @@
+<% content_for :title, "Покупатели — CRM" %>
+<main id="main-content" class="page">
+  <p class="breadcrumbs"><%= link_to "Обзор базы", crm_path %> / Покупатели</p>
+  <div class="page-heading"><div><p class="eyebrow">Клиентская база</p><h1>Покупатели</h1><p class="muted">Найдите покупателя и изучите историю, RFM и согласия.</p></div></div>
+  <%= render "shared/rfm_context" %>
+  <%= form_with url: customers_path, method: :get, class: "filter-form" do |form| %>
+    <div class="field search-field"><%= form.label :q, "Поиск по имени, ID или контакту" %><%= form.search_field :q, value: @query, maxlength: 100, placeholder: "Например, Демо-покупатель 001" %></div>
+    <div class="field"><%= form.label :segment, "Сегмент" %><%= form.select :segment, @segment_definitions.map { |key, value| [ value.fetch("label"), key ] }, { include_blank: "Все сегменты", selected: @selected_segment } %></div>
+    <%= form.submit "Найти", class: "button button-primary" %>
+    <%= link_to "Сбросить", customers_path, class: "button button-quiet" %>
+  <% end %>
+  <div class="section-heading"><h2>Список покупателей</h2><span class="muted">Найдено: <%= @total_count %> · по 20 на странице</span></div>
+  <% if @customers.empty? %>
+    <div class="empty-state" data-empty-state><h3>Покупатели не найдены</h3><p>Попробуйте другой запрос или сбросьте фильтры. Если база пуста, подготовьте демоданные.</p><%= link_to "Сбросить фильтры", customers_path %></div>
+  <% else %>
+    <div class="table-wrap" role="region" aria-label="Покупатели" tabindex="0">
+      <table><caption class="visually-hidden">Покупатели и их показатели в окне RFM</caption><thead><tr><th scope="col">Покупатель</th><th scope="col">Контакт</th><th scope="col">Сегмент</th><th scope="col">Заказы в окне</th><th scope="col">Сумма в окне</th></tr></thead><tbody>
+        <% @customers.each do |customer| %>
+          <% rfm = @rfm_by_customer.fetch(customer.id) %>
+          <tr data-customer-id="<%= customer.id %>"><td><%= link_to customer.name, customer_path(customer), class: "customer-name" %><small><%= customer.external_id %></small></td><td><%= customer.email || customer.phone || "Контакт не указан" %></td><td><%= link_to rfm.segment_label, segment_path(rfm.segment), class: "badge badge-link" %></td><td><%= rfm.frequency %></td><td class="money"><%= rubles(rfm.monetary_cents) %></td></tr>
+        <% end %>
+      </tbody></table>
+    </div>
+    <%= render "shared/pagination", base_path: customers_path %>
+  <% end %>
+</main>

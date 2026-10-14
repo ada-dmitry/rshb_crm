@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ru">
   <head>
-    <title><%= content_for(:title) || "Rshb Stipa" %></title>
+    <title><%= content_for(:title) || "CRM возврата покупателей" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Rshb Stipa">
@@ -24,6 +24,25 @@
   </head>
 
   <body>
+    <a class="skip-link" href="#main-content">К содержимому</a>
+    <header class="site-header">
+      <div class="header-inner">
+        <%= link_to root_path, class: "brand", aria: { label: "CRM возврата покупателей — главная" } do %>
+          <span class="brand-mark" aria-hidden="true">Р</span><span>Своё хозяйство<small>CRM возврата покупателей</small></span>
+        <% end %>
+        <% if authenticated? %>
+          <nav aria-label="Основная навигация" class="main-nav">
+            <%= link_to "Обзор", crm_path, aria: { current: controller_name == "dashboard" ? "page" : nil } %>
+            <%= link_to "Покупатели", customers_path, aria: { current: controller_name == "customers" ? "page" : nil } %>
+            <%= button_to "Выйти", session_path, method: :delete, class: "button button-quiet" %>
+          </nav>
+        <% end %>
+      </div>
+    </header>
+    <% if authenticated? %>
+      <div class="demo-banner" data-demo-banner><strong>Демонстрационный режим.</strong> Синтетические данные · реальные сообщения не отправляются.</div>
+    <% end %>
     <%= yield %>
+    <footer class="site-footer">Локальный прототип · одно хозяйство · решения подтверждает фермер</footer>
   </body>
 </html>

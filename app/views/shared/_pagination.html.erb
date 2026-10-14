@@ -1,0 +1,11 @@
+<% if @page_count > 1 %>
+  <nav class="pagination" aria-label="Страницы списка">
+    <% if @page > 1 %>
+      <%= link_to "← Предыдущая", "#{base_path}?#{@pagination_params.merge(page: @page - 1).to_query}", rel: "prev", class: "button button-secondary" %>
+    <% end %>
+    <span aria-current="page">Страница <%= @page %> из <%= @page_count %></span>
+    <% if @page < @page_count %>
+      <%= link_to "Следующая →", "#{base_path}?#{@pagination_params.merge(page: @page + 1).to_query}", rel: "next", class: "button button-secondary" %>
+    <% end %>
+  </nav>
+<% end %>

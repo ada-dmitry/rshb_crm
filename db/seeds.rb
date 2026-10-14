@@ -7,3 +7,6 @@ Demo::UserSeed.call(
   email: "farmer@example.com",
   password: "local-demo-password"
 )
+
+Demo::Seed.call
+puts "Демоданные подготовлены; существующие записи сохранены."

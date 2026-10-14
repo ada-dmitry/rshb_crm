@@ -41,12 +41,19 @@ class DemoUserSeedTest < ActiveSupport::TestCase
     Rails.env = original_env
   end
 
-  test "seeds without explicit credentials do not create users" do
+  test "seeds without explicit credentials create the default demo user only once" do
     original_email = ENV.delete("DEMO_EMAIL")
     original_password = ENV.delete("DEMO_PASSWORD")
-    assert_no_difference "User.count" do
+    assert_difference "User.count", 1 do
       load Rails.root.join("db/seeds.rb")
     end
+    user = User.find_by!(email_address: "farmer@example.com")
+    assert user.authenticate("local-demo-password")
+    session = user.sessions.create!
+    assert_no_difference [ "User.count", "Session.count", "Customer.count", "Order.count", "Consent.count" ] do
+      load Rails.root.join("db/seeds.rb")
+    end
+    assert Session.exists?(session.id)
   ensure
     ENV["DEMO_EMAIL"] = original_email
     ENV["DEMO_PASSWORD"] = original_password

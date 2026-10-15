@@ -1,6 +1,6 @@
 # CRM возврата покупателей
 
-Этапы 1–8: Rails-каркас с PostgreSQL, входом фермера, моделями покупателей,
+Этапы 1–9: Rails-каркас с PostgreSQL, входом фермера, моделями покупателей,
 заказов и согласий, воспроизводимой демобазой, RFM-панелью, черновиками кампаний
 и подтверждаемым ручным запуском локальной симуляции. Есть аналитика на явно
 моделируемых событиях доставки и перехода. Реальных рассылок нет.
@@ -10,6 +10,10 @@
 Стек: **Ruby 4.0.7**, **Rails 8.1.4**, **PostgreSQL 16**, Hotwire (Turbo,
 Stimulus и Importmap). Версии зависимостей закреплены в `Gemfile.lock`.
 Исходные материалы в `sources/` и Nix-окружение сохранены.
+
+- [Архитектура, соответствие требованиям и ограничения](docs/architecture.md).
+- [Пятиминутная демонстрация и браузерная приёмка](docs/demo.md).
+- Сквозной HTTP-сценарий: `test/integration/crm_flow_test.rb`.
 
 ## Основной запуск: Docker Compose
 
@@ -199,10 +203,10 @@ bin/brakeman --no-pager
 а не готовая production-аутентификация. Cookie сессии подписана, имеет
 `HttpOnly` и `SameSite=Lax`; в production также выставляется `Secure`.
 
-## Границы этапа
+## Границы MVP
 
-Реализованы этапы 1–6 изначального плана разработки.
-Бизнес-функции этапов 7–9 и production-развёртывание в этот каркас не входят.
+Реализованы этапы 1–9 изначального плана разработки.
+Production-развёртывание и реальные коммуникации в MVP не входят.
 
 ## Покупатели, заказы и согласия (этап 3)
 
@@ -567,7 +571,7 @@ GET карточки/`preview` ничего не генерирует. Нажм�
 
 Показатели не зависят от текущих контактов, согласий или заказов. Атрибуции
 выручки, заявлений о росте продаж, tracking pixel, настоящих click URL, внешних
-адаптеров, фонового планировщика и этапа 9 нет.
+адаптеров и фонового планировщика нет.
 
 ```bash
 direnv exec . bin/rails test test/models/campaign_event_test.rb test/services/campaigns/event_simulator_test.rb test/services/campaigns/event_simulator_concurrency_test.rb test/queries/campaign_metrics_query_test.rb test/integration/campaign_analytics_test.rb
@@ -592,3 +596,75 @@ Playwright: при 390 и 1440 px проверены аналитика стар
 и 4 перехода. Добавлена одна development-кампания `Этап 8 · автоматические события`:
 22 локальных контакта, 20 моделируемых доставок и 7 переходов (90,9% и 35,0%).
 200 покупателей и 1 000 заказов сохранены; это только синтетические показатели.
+
+## Изолированная приёмка (этап 9)
+
+Не используйте существующий проект Compose для чистого запуска. Сначала
+убедитесь, что имя проекта, том и порт свободны (`docker ps -a`,
+`docker volume ls`). Пример для **нового** проекта; если он уже существует,
+выберите другое имя, а не удаляйте чужие контейнеры или том:
+
+```bash
+export COMPOSE_PROJECT_NAME=crm_acceptance_09
+export PORT=3109
+docker compose config --quiet
+docker compose up --build -d
+curl --fail http://localhost:3109/up
+docker compose exec web bin/rails zeitwerk:check
+docker compose exec -e RAILS_ENV=test web bin/rails db:prepare
+docker compose exec -e RAILS_ENV=test -e PARALLEL_WORKERS=2 web bin/rails test
+```
+
+Это отдельная сеть и том `crm_acceptance_09_postgres_data`, отдельный сервер
+PostgreSQL без порта на хосте. Одинаковое имя БД внутри разных серверов не означает
+общие данные. Не задавайте `DATABASE_URL`/`TEST_DATABASE_URL` на существующую БД.
+Подготовка новой БД загружает 200 покупателей, 1 000 заказов и демопользователя;
+локальная Nix development-база и прежний том не используются.
+
+Публичные реквизиты: `farmer@example.com` / `local-demo-password`.
+Пройдите [демонстрацию](docs/demo.md) на <http://localhost:3109/>.
+После создания кампании сравните **полный снимок бизнес-таблиц**, а не только
+количество записей, до и после перезапуска (в Bash):
+
+```bash
+acceptance_snapshot() {
+  docker compose exec -T web bin/rails runner 'require "digest"; models = [User, Session, Customer, Order, Consent, Campaign, CampaignRecipient, CampaignEvent]; data = models.map { |m| [m.name, m.order(:id).map(&:attributes)] }; puts "ACCEPTANCE_SHA256=#{Digest::SHA256.hexdigest(data.to_json)}"' | grep '^ACCEPTANCE_SHA256='
+}
+before=$(acceptance_snapshot) && test -n "$before"
+docker compose restart
+curl --fail --retry 20 --retry-all-errors --retry-delay 2 http://localhost:3109/up
+after=$(acceptance_snapshot) && test "$before" = "$after"
+```
+
+Не открывайте браузер между снимками: вход меняет таблицу сессий.
+Повторите сравнение с `docker compose down` и `docker compose up -d` вместо
+`restart` для проверки пересоздания контейнеров с тем же томом.
+В Podman при уже описанной гонке сначала вручную выполните
+`docker healthcheck run crm_acceptance_09_db_1`, затем `docker compose up -d`;
+не выдавайте восстановление таким способом за беспроблемный Docker Compose.
+Завершите только приёмочный проект: `docker compose down` **без `-v`**.
+Том остаётся для повторной демонстрации. После пересоздания web-контейнера
+в development может потребоваться повторный вход (cookie не считается
+гарантированно переносимой между контейнерами); данные кампаний сохраняются.
+`unset COMPOSE_PROJECT_NAME PORT`
+возвращает терминал к настройкам по умолчанию.
+
+Локальные проверки этапа:
+
+```bash
+direnv exec . env PARALLEL_WORKERS=2 bin/rails test
+direnv exec . bin/rubocop
+direnv exec . bin/rails zeitwerk:check
+direnv exec . bin/brakeman --no-pager
+```
+
+На 15.10.2026: 129 тестов / 1 336 assertions, без ошибок и пропусков;
+RuboCop — 90 файлов без замечаний; Zeitwerk — OK; штатный Brakeman 8.1.0 —
+0 ошибок / 0 предупреждений. Прежний сбой `ensure_latest` в этом запуске
+не повторился; скрипт не менялся. В чистой контейнерной тестовой БД также
+прошли все 129 тестов и Zeitwerk. Браузерный сценарий на 390/1440 px пройден;
+полный SHA-256 снимка восьми таблиц совпал после restart с восстановлением web
+и после пересоздания контейнеров. В Podman потребовались ручной healthcheck
+и повторный `up -d`: автономный старт и restart без обходов не подтверждены.
+Настоящий Docker Compose v2 **не проверен**.
+Детали runtime и браузерной приёмки — в [docs/demo.md](docs/demo.md).

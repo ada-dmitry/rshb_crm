@@ -50,14 +50,10 @@
 /.dockerignore
 /Dockerfile*
 
-# Keep local gems, Nix state, research artifacts out of the image.
+# Keep local gems, Nix state and research artifacts out of the image.
 /vendor/bundle/
 /.direnv/
-
 /.playwright-mcp/
-/sources/
-/analysis.md
-/tasks.md
 /flake.nix
 /flake.lock
 /.pre-commit-config.yaml

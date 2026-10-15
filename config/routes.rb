@@ -6,6 +6,8 @@ Rails.application.routes.draw do
     resources :segments, only: :show
     resources :campaigns, only: %i[ index new create show edit update ] do
       get :preview, on: :member
+      post :confirm, on: :member
+      post :launch, on: :member
     end
   end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

@@ -5,6 +5,7 @@
   </ul></div>
 <% end %>
 <%= form_with model: @campaign, class: "campaign-form" do |form| %>
+  <%= form.hidden_field :lock_version if @campaign.persisted? %>
   <div class="panel form-panel"><h2>Предложение</h2>
     <div class="field"><%= form.label :name, "Название кампании" %><%= form.text_field :name, required: true, maxlength: 120, aria: { invalid: @campaign.errors.include?(:name) } %></div>
     <div class="form-columns">

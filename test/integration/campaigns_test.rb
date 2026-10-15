@@ -101,7 +101,7 @@ class CampaignsTest < ActionDispatch::IntegrationTest
     assert_equal before, snapshot
     assert_select "form[action*='launch']", count: 0
     post "/crm/campaigns/#{@campaign.id}/launch"
-    assert_response :not_found
+    assert_response :unprocessable_content
   end
 
   test "empty segment list unknown campaign and escaped body are handled" do

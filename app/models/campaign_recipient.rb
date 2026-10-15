@@ -1,5 +1,5 @@
 class CampaignRecipient < ApplicationRecord
-  STATUSES = %w[pending simulated failed].freeze
+  STATUSES = %w[pending simulated failed excluded].freeze
 
   belongs_to :campaign
   belongs_to :customer
@@ -9,4 +9,8 @@ class CampaignRecipient < ApplicationRecord
   validates :status, inclusion: { in: STATUSES }
   validates :contacted_at, presence: true, if: -> { status == "simulated" }
   validates :contacted_at, absence: true, unless: -> { status == "simulated" }
+
+  def eligible?
+    status == "simulated"
+  end
 end

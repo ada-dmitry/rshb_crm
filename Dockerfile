@@ -3,7 +3,7 @@ FROM docker.io/library/ruby:4.0.7-slim
 # Development/demo image: includes the test gems for Compose verification.
 WORKDIR /rails
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y build-essential git libpq-dev libyaml-dev pkg-config curl && \
+    apt-get install --no-install-recommends -y build-essential git libpq-dev postgresql-client libyaml-dev pkg-config curl && \
     rm -rf /var/lib/apt/lists/*
 
 ENV RAILS_ENV=development \

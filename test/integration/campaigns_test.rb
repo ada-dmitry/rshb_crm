@@ -32,7 +32,6 @@ class CampaignsTest < ActionDispatch::IntegrationTest
     assert_select "select[name='campaign[segment]'] option[selected][value='no_purchases']"
     assert_select "select[name='campaign[offer]'] option[selected][value='catalog_introduction']"
     assert_select "label[for='campaign_scheduled_at']", /UTC/
-    assert_select "[data-demo-banner]"
   end
 
   test "creates draft for current user while rejecting injected lifecycle fields" do
@@ -48,7 +47,7 @@ class CampaignsTest < ActionDispatch::IntegrationTest
     assert_equal Time.utc(2026, 10, 21, 12, 30), created.scheduled_at
     assert_redirected_to "/crm/campaigns/#{created.id}"
     follow_redirect!
-    assert_select "[role='status']", /Сообщения не отправлены/
+    assert_select "[role='status']", /Черновик сохранён/
     assert_select "[data-eligible-count]", "1"
   end
 

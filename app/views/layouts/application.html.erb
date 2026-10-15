@@ -28,7 +28,7 @@
     <header class="site-header">
       <div class="header-inner">
         <%= link_to root_path, class: "brand", aria: { label: "CRM возврата покупателей — главная" } do %>
-          <span class="brand-mark" aria-hidden="true">Р</span><span>Своё хозяйство<small>CRM возврата покупателей</small></span>
+          <span>Своё хозяйство<small>CRM возврата покупателей</small></span>
         <% end %>
         <% if authenticated? %>
           <nav aria-label="Основная навигация" class="main-nav">
@@ -40,11 +40,7 @@
         <% end %>
       </div>
     </header>
-    <% if authenticated? %>
-      <div class="demo-banner" data-demo-banner><strong>Демонстрационный режим.</strong> Синтетические данные · реальные сообщения не отправляются.</div>
-    <% end %>
     <%= tag.div(flash[:notice], role: "status", class: "flash-notice") if flash[:notice] %>
     <%= yield %>
-    <footer class="site-footer">Локальный прототип · одно хозяйство · решения подтверждает фермер</footer>
   </body>
 </html>

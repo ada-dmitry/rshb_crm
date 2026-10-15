@@ -1,14 +1,14 @@
 <% content_for :title, "Черновики кампаний — CRM" %>
 <main id="main-content" class="page">
   <p class="breadcrumbs"><%= link_to "Обзор базы", crm_path %> / Кампании</p>
-  <div class="page-heading"><div><p class="eyebrow">Конструктор коммуникаций</p><h1>Черновики кампаний</h1><p class="muted">Подготовьте предложение и проверьте охват без отправки.</p></div><%= link_to "Новый черновик +", new_campaign_path, class: "button button-primary" %></div>
+  <div class="page-heading"><div><h1>Черновики кампаний</h1><p class="muted">Подготовьте предложение и проверьте охват.</p></div><%= link_to "Новый черновик +", new_campaign_path, class: "button button-primary" %></div>
   <% if @campaigns.empty? %>
-    <div class="empty-state" data-empty-campaigns><h2>Черновиков пока нет</h2><p>Начните с карточки сегмента или создайте черновик вручную. Сообщения не отправляются.</p></div>
+    <div class="empty-state" data-empty-campaigns><h2>Черновиков пока нет</h2><p>Начните с карточки сегмента или создайте черновик вручную.</p></div>
   <% else %>
     <div class="table-wrap" role="region" aria-label="Черновики кампаний" tabindex="0"><table><caption class="visually-hidden">Сохранённые кампании</caption><thead><tr><th scope="col">Кампания</th><th scope="col">Сегмент</th><th scope="col">Канал</th><th scope="col">Время UTC</th><th scope="col">Статус</th></tr></thead><tbody>
       <% @campaigns.each do |campaign| %><tr data-campaign-id="<%= campaign.id %>"><td><%= link_to campaign.name, campaign_path(campaign), class: "customer-name" %></td><td><%= @segment_definitions.fetch(campaign.segment).fetch("label") %></td><td><%= campaign.channel %></td><td><%= crm_time(campaign.scheduled_at) %></td><td><span class="badge"><%= campaign.draft? ? "Черновик" : "Запущена" %></span></td></tr><% end %>
     </tbody></table></div>
     <%= render "shared/pagination", base_path: campaigns_path %>
   <% end %>
-   <aside class="notice">После подтверждения фермером кампания запускается вручную, не раньше выбранного времени. Только локальная симуляция: реальных сообщений и фонового планировщика нет.</aside>
+   <aside class="notice">После подтверждения фермером кампания запускается вручную, не раньше выбранного времени.</aside>
 </main>

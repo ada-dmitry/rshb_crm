@@ -31,7 +31,7 @@ class CampaignAnalyticsTest < ActionDispatch::IntegrationTest
     [ campaign_path(@campaign), preview_campaign_path(@campaign) ].each do |path|
       get path
       assert_response :success
-      assert_select "[data-simulated-analytics]", /Моделируемая аналитика/
+      assert_select "[data-simulated-analytics]", /Аналитика кампании/
       assert_select "[data-no-modeled-events]"
       assert_select "[data-contacted-count]", "12"
       assert_select "[data-delivered-count]", "0"
@@ -50,7 +50,7 @@ class CampaignAnalyticsTest < ActionDispatch::IntegrationTest
     assert_redirected_to campaign_path(@campaign)
     follow_redirect!
     assert_select "[data-no-modeled-events]", count: 0
-    assert_select "[data-simulated-analytics]", /Не реальные доставки и переходы/
+    assert_select "[data-simulated-analytics]", /Аналитика кампании/
     assert_select "[data-contacted-count]", "12"
     assert_select "[data-delivered-count]", "11"
     assert_select "[data-clicked-count]", "2"

@@ -20,7 +20,6 @@ class CrmFlowTest < ActionDispatch::IntegrationTest
       post session_path, params: { email_address: users(:one).email_address, password: "password" }
       assert_redirected_to crm_path
       follow_redirect!
-      assert_select "[data-demo-banner]"
 
       get segment_path("no_purchases")
       assert_response :success
@@ -93,7 +92,7 @@ class CrmFlowTest < ActionDispatch::IntegrationTest
           assert_response :success
           assert_select "[data-launch-result]"
           assert_select "[data-eligible-count]", "12"
-          assert_select "[data-simulated-analytics]", /Не реальные доставки и переходы/
+          assert_select "[data-simulated-analytics]", /Аналитика кампании/
           assert_select "[data-contacted-count]", "12"
           assert_select "[data-delivered-count]", delivered.to_s
           assert_select "[data-clicked-count]", clicked.to_s

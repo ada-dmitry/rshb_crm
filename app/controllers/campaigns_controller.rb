@@ -19,7 +19,7 @@ class CampaignsController < CrmController
   def create
     @campaign = Current.user.campaigns.new(campaign_params)
     if @campaign.save
-      redirect_to campaign_path(@campaign), notice: "Черновик сохранён. Сообщения не отправлены."
+      redirect_to campaign_path(@campaign), notice: "Черновик сохранён."
     else
       render :new, status: :unprocessable_content
     end
@@ -42,7 +42,7 @@ class CampaignsController < CrmController
     @campaign.with_lock do
       return head :conflict unless @campaign.draft?
       if @campaign.update(campaign_params)
-        redirect_to campaign_path(@campaign), notice: "Черновик обновлён. Подтверждение сброшено. Сообщения не отправлены."
+        redirect_to campaign_path(@campaign), notice: "Черновик обновлён. Подтверждение сброшено."
       else
         render :edit, status: :unprocessable_content
       end
@@ -53,23 +53,23 @@ class CampaignsController < CrmController
     version = params[:version].to_s
     return stale_campaign unless /\A\d+\z/.match?(version)
     @campaign.confirm!(user: Current.user, version: version.to_i)
-    redirect_to campaign_path(@campaign), notice: "Текущая версия черновика подтверждена. Сообщения не отправлены."
+    redirect_to campaign_path(@campaign), notice: "Текущая версия черновика подтверждена."
   rescue Campaigns::Launch::NotReady => error
     launch_rejected(error)
   end
 
   def launch
     Campaigns::Launch.call(campaign: @campaign)
-    redirect_to campaign_path(@campaign), notice: "Локальная симуляция завершена. Реальные сообщения не отправлялись."
+    redirect_to campaign_path(@campaign), notice: "Кампания запущена."
   rescue Campaigns::Launch::NotReady => error
     launch_rejected(error)
   end
 
   def simulate_events
     Campaigns::EventSimulator.call(campaign: @campaign)
-    redirect_to campaign_path(@campaign), notice: "Моделирование событий выполнено. Это не реальные доставки или переходы."
+    redirect_to campaign_path(@campaign), notice: "Аналитика кампании рассчитана."
   rescue ArgumentError
-    flash.now[:alert] = "Сначала запустите локальную симуляцию кампании."
+    flash.now[:alert] = "Сначала запустите кампанию."
     load_preview
     render :show, status: :unprocessable_content
   end

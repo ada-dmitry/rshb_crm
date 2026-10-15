@@ -1,8 +1,8 @@
 <% content_for :title, "Обзор базы — CRM" %>
 <main id="main-content" class="page">
   <section class="page-heading">
-    <div><p class="eyebrow">Возвращайте покупателей осознанно</p>
-  <h1>Кабинет фермера</h1>
+    <div>
+      <h1>Кабинет фермера</h1>
     <p class="muted">Исследуйте базу и выберите подходящий повод для следующей покупки.</p></div>
     <%= link_to "Все покупатели →", customers_path, class: "button button-primary" %>
   </section>
@@ -10,22 +10,19 @@
   <section class="metric-grid" aria-label="Обзор базы">
     <article class="metric-card"><p>Покупатели в базе</p><strong data-customer-count><%= @customer_count %></strong><span>Все покупатели, включая тех, кто без заказов</span></article>
     <article class="metric-card"><p>Заказы за всё время</p><strong data-order-count><%= @order_count %></strong><span>Включая отменённые и будущие заказы</span></article>
-    <article class="metric-card"><p>Сумма покупок в окне RFM</p><strong><%= rubles(@window_revenue_cents) %></strong><span>Только завершённые заказы · не прогноз выручки</span></article>
+    <article class="metric-card"><p>Сумма покупок в окне RFM</p><strong><%= rubles(@window_revenue_cents) %></strong><span>Только завершённые заказы</span></article>
   </section>
   <% if @customer_count.zero? %>
-    <div class="empty-state" data-empty-state><h2>База покупателей пока пуста</h2><p>Подготовьте локальную демобазу командой <code>bin/rails db:seed</code>.</p></div>
+    <div class="empty-state" data-empty-state><h2>База покупателей пока пуста</h2><p>Добавьте покупателей в базу, чтобы начать работу.</p></div>
   <% end %>
   <section aria-labelledby="segments-heading">
-    <div class="section-heading"><h2 id="segments-heading">Сегменты покупателей</h2><span class="muted">Прозрачные правила, без ML</span></div>
-    <div class="segment-grid">
-      <% @segment_definitions.each do |key, definition| %>
-        <article class="segment-card" data-segment="<%= key %>">
-          <div class="card-top"><span class="badge"><%= definition.fetch("label") %></span><strong class="segment-count"><%= @segment_counts.fetch(key, 0) %></strong></div>
-          <p class="muted"><%= definition.fetch("reason") %></p>
-          <%= link_to "Подробнее о сегменте →", segment_path(key), aria: { label: "Подробнее: #{definition.fetch('label')}" } %>
-        </article>
-      <% end %>
+    <div class="section-heading"><h2 id="segments-heading">Сегменты покупателей</h2></div>
+    <div class="table-wrap" role="region" aria-label="Сегменты покупателей" tabindex="0">
+      <table><caption class="visually-hidden">Сегменты покупателей и их размеры</caption><thead><tr><th scope="col">Сегмент</th><th scope="col" class="num">Покупателей</th><th scope="col">Основание</th></tr></thead><tbody>
+        <% @segment_definitions.each do |key, definition| %>
+          <tr data-segment="<%= key %>"><td><%= link_to definition.fetch("label"), segment_path(key) %></td><td class="num"><%= @segment_counts.fetch(key, 0) %></td><td class="muted"><%= definition.fetch("reason") %></td></tr>
+        <% end %>
+      </tbody></table>
     </div>
   </section>
-  <aside class="notice"><strong>Сегмент — не разрешение на сообщение.</strong> Перед любой коммуникацией нужны контакт, согласие по каналу, проверка частоты и подтверждение фермера.</aside>
 </main>

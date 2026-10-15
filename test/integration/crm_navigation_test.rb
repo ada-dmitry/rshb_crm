@@ -21,7 +21,6 @@ class CrmNavigationTest < ActionDispatch::IntegrationTest
     get "/crm"
     assert_response :success
     assert_select "h1", "Кабинет фермера"
-    assert_select "[data-demo-banner]", /Синтетические данные/
     assert_select "[data-reference-date]", /2026-10-13/
     assert_select "a[href='/crm/customers']"
     assert_select "a[href='/crm/segments/new_customers']"

@@ -24,10 +24,6 @@ docker compose up --build -d
 docker compose logs -f web
 ```
 
-Откройте <http://localhost:3000/>. Проверка работоспособности:
-<http://localhost:3000/up>. Первый запуск скачивает образы и устанавливает gems.
-Compose ждёт healthcheck PostgreSQL; entrypoint выполняет `db:prepare`
-перед запуском Rails. Это подготовка/миграция, **не сброс данных**.
 
 Контейнер запускается в `development`, содержит тестовые зависимости и слушает
 только `127.0.0.1` хоста. Это локальное демо, не production-deploy.

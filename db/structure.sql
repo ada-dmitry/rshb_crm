@@ -10,6 +10,40 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
+-- Name: protect_campaign_event(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.protect_campaign_event() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  campaign_status text;
+  recipient_status text;
+  contact_time timestamp;
+BEGIN
+  IF TG_OP <> 'INSERT' THEN
+    RAISE EXCEPTION 'Simulated events are immutable' USING ERRCODE = '23514';
+  END IF;
+  SELECT c.status, r.status, r.contacted_at
+    INTO campaign_status, recipient_status, contact_time
+    FROM campaigns c JOIN campaign_recipients r ON r.campaign_id = c.id
+    WHERE r.id = NEW.campaign_recipient_id FOR UPDATE OF c;
+  IF campaign_status IS DISTINCT FROM 'launched' OR recipient_status IS DISTINCT FROM 'simulated'
+    OR contact_time IS NULL OR NEW.occurred_at < contact_time THEN
+    RAISE EXCEPTION 'Events require a launched simulated contact and valid chronology' USING ERRCODE = '23514';
+  END IF;
+  IF NEW.event_type = 'clicked' AND NOT EXISTS (
+    SELECT 1 FROM campaign_events WHERE campaign_recipient_id = NEW.campaign_recipient_id
+      AND event_type = 'delivered' AND occurred_at <= NEW.occurred_at
+  ) THEN
+    RAISE EXCEPTION 'Click requires an earlier modeled delivery' USING ERRCODE = '23514';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+
+--
 -- Name: protect_campaign_launch(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -79,6 +113,43 @@ CREATE TABLE public.ar_internal_metadata (
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL
 );
+
+
+--
+-- Name: campaign_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.campaign_events (
+    id bigint NOT NULL,
+    campaign_recipient_id bigint NOT NULL,
+    event_type character varying NOT NULL,
+    source character varying DEFAULT 'simulated'::character varying NOT NULL,
+    simulation_version integer DEFAULT 1 NOT NULL,
+    occurred_at timestamp(6) without time zone NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT campaign_events_simulated_only CHECK ((((source)::text = 'simulated'::text) AND (simulation_version = 1))),
+    CONSTRAINT campaign_events_type_valid CHECK (((event_type)::text = ANY ((ARRAY['delivered'::character varying, 'clicked'::character varying])::text[])))
+);
+
+
+--
+-- Name: campaign_events_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.campaign_events_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: campaign_events_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.campaign_events_id_seq OWNED BY public.campaign_events.id;
 
 
 --
@@ -359,6 +430,13 @@ ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 
 
 --
+-- Name: campaign_events id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.campaign_events ALTER COLUMN id SET DEFAULT nextval('public.campaign_events_id_seq'::regclass);
+
+
+--
 -- Name: campaign_recipients id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -413,6 +491,14 @@ ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_
 
 ALTER TABLE ONLY public.ar_internal_metadata
     ADD CONSTRAINT ar_internal_metadata_pkey PRIMARY KEY (key);
+
+
+--
+-- Name: campaign_events campaign_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.campaign_events
+    ADD CONSTRAINT campaign_events_pkey PRIMARY KEY (id);
 
 
 --
@@ -477,6 +563,20 @@ ALTER TABLE ONLY public.sessions
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: index_campaign_events_on_campaign_recipient_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_campaign_events_on_campaign_recipient_id ON public.campaign_events USING btree (campaign_recipient_id);
+
+
+--
+-- Name: index_campaign_events_on_campaign_recipient_id_and_event_type; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_campaign_events_on_campaign_recipient_id_and_event_type ON public.campaign_events USING btree (campaign_recipient_id, event_type);
 
 
 --
@@ -578,6 +678,13 @@ CREATE UNIQUE INDEX index_users_on_email_address ON public.users USING btree (em
 
 
 --
+-- Name: campaign_events protect_campaign_event; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER protect_campaign_event BEFORE INSERT OR DELETE OR UPDATE ON public.campaign_events FOR EACH ROW EXECUTE FUNCTION public.protect_campaign_event();
+
+
+--
 -- Name: campaigns protect_campaign_launch; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -648,12 +755,21 @@ ALTER TABLE ONLY public.campaigns
 
 
 --
+-- Name: campaign_events fk_rails_be0243a625; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.campaign_events
+    ADD CONSTRAINT fk_rails_be0243a625 FOREIGN KEY (campaign_recipient_id) REFERENCES public.campaign_recipients(id);
+
+
+--
 -- PostgreSQL database dump complete
 --
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261015100000'),
 ('20261015061000'),
 ('20261015060000'),
 ('20261014220000'),

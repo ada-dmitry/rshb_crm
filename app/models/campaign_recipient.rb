@@ -3,6 +3,7 @@ class CampaignRecipient < ApplicationRecord
 
   belongs_to :campaign
   belongs_to :customer
+  has_many :campaign_events, dependent: :restrict_with_error
 
   validates :customer_id, uniqueness: { scope: :campaign_id }
   validates :channel, inclusion: { in: Consent::CHANNELS }

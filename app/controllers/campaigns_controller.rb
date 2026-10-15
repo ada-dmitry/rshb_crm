@@ -2,7 +2,7 @@ class CampaignsController < CrmController
   skip_before_action :load_rfm
   around_action :use_utc_zone
   before_action :campaign_context
-  before_action :set_campaign, only: %i[ show edit update preview confirm launch ]
+  before_action :set_campaign, only: %i[ show edit update preview confirm launch simulate_events ]
   rescue_from ActiveRecord::StaleObjectError, with: :stale_campaign
 
   def index
@@ -65,6 +65,15 @@ class CampaignsController < CrmController
     launch_rejected(error)
   end
 
+  def simulate_events
+    Campaigns::EventSimulator.call(campaign: @campaign)
+    redirect_to campaign_path(@campaign), notice: "Моделирование событий выполнено. Это не реальные доставки или переходы."
+  rescue ArgumentError
+    flash.now[:alert] = "Сначала запустите локальную симуляцию кампании."
+    load_preview
+    render :show, status: :unprocessable_content
+  end
+
   private
     def use_utc_zone(&action)
       Time.use_zone("UTC", &action)
@@ -85,6 +94,7 @@ class CampaignsController < CrmController
       else
         Campaigns::Preview::Result.new(entries: @campaign.campaign_recipients.order(:customer_id).to_a, evaluated_at: @campaign.launched_at, generated_at: @campaign.launched_at)
       end
+      @metrics = CampaignMetricsQuery.call(campaign: @campaign) unless @campaign.draft?
       @reference_date = @campaign.reference_date
       @window_days = @campaign.window_days
       @pagination_params = {}

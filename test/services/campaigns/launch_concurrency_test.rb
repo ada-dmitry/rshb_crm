@@ -19,14 +19,17 @@ class CampaignsLaunchConcurrencyTest < ActiveSupport::TestCase
     # bypass immutable-history triggers; restore them in the same transaction.
     Campaign.transaction do
       connection = Campaign.connection
+      connection.execute("ALTER TABLE campaign_events DISABLE TRIGGER protect_campaign_event")
       connection.execute("ALTER TABLE campaign_recipients DISABLE TRIGGER protect_campaign_snapshot")
       connection.execute("ALTER TABLE campaigns DISABLE TRIGGER protect_campaign_launch")
+      CampaignEvent.where(campaign_recipient_id: CampaignRecipient.where(campaign_id: @campaigns.map(&:id))).delete_all
       CampaignRecipient.where(campaign_id: @campaigns.map(&:id)).delete_all
       Campaign.where(id: @campaigns.map(&:id)).delete_all
       @customer.consents.delete_all
       @customer.delete
       connection.execute("ALTER TABLE campaigns ENABLE TRIGGER protect_campaign_launch")
       connection.execute("ALTER TABLE campaign_recipients ENABLE TRIGGER protect_campaign_snapshot")
+      connection.execute("ALTER TABLE campaign_events ENABLE TRIGGER protect_campaign_event")
     end
   end
 
@@ -74,9 +77,11 @@ class CampaignsLaunchConcurrencyTest < ActiveSupport::TestCase
       pid = Timeout.timeout(10) { backend.pop }
       # Prove the requests overlap: first transaction has not committed and
       # second has reached PostgreSQL and is waiting for the shared mutex.
-      Timeout.timeout(10) do
-        until ActiveRecord::Base.connection.select_value("SELECT EXISTS (SELECT 1 FROM pg_locks WHERE pid = #{Integer(pid)} AND locktype = 'advisory' AND NOT granted)")
-          sleep 0.01
+      Campaign.uncached do
+        Timeout.timeout(10) do
+          until ActiveRecord::Base.connection.select_value("SELECT EXISTS (SELECT 1 FROM pg_locks WHERE pid = #{Integer(pid)} AND locktype = 'advisory' AND NOT granted)")
+            sleep 0.01
+          end
         end
       end
       assert_equal 0, CampaignRecipient.where(customer: @customer).count

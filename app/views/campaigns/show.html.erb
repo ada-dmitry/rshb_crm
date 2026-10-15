@@ -21,6 +21,7 @@
   <% else %>
     <section class="panel" data-launch-result><h2>Результат локальной симуляции</h2><p>Завершено: <%= crm_time(@campaign.launched_at) %>. Реальные сообщения не отправлялись. Список и причины исключения зафиксированы и больше не пересчитываются.</p><p>Подтвердил: <%= @campaign.confirmed_by&.email_address %> · <%= crm_time(@campaign.confirmed_at) %>.</p></section>
   <% end %>
+  <%= render "analytics" unless @campaign.draft? %>
   <div class="section-heading"><h2><%= @campaign.draft? ? "Расчёт допустимого охвата" : "Зафиксированные получатели" %></h2><% if @campaign.draft? %><%= link_to "Пересчитать охват ↻", preview_campaign_path(@campaign), class: "button button-secondary" %><% end %></div>
   <p class="muted preview-context">Проверено: <%= crm_time(@preview.generated_at) %>. Лимит оценивается на <%= crm_time(@preview.evaluated_at) %>, один контакт за 7 дней по всем каналам.</p>
   <section class="metric-grid" aria-label="Предварительный охват">

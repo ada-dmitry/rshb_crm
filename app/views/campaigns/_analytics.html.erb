@@ -1,0 +1,15 @@
+<section class="panel" data-simulated-analytics aria-labelledby="analytics-heading">
+  <h2 id="analytics-heading">Моделируемая аналитика</h2>
+  <p><strong>Не реальные доставки и переходы.</strong> Синтетические события иллюстрируют работу CRM, не измеряют продажи, выручку или фактическое поведение покупателей.</p>
+  <p class="field-help">Алгоритм v1 воспроизводим: повторный запуск не меняет события и не создаёт дубли. Время событий моделируется относительно локального контакта и может быть в будущем.</p>
+  <% if @metrics.event_count.zero? %>
+    <p class="notice" data-no-modeled-events>Сохранённых моделируемых событий пока нет: моделирование могло ещё не запускаться либо модель не выбрала ни одной доставки. Для прежней кампании доступна кнопка ниже; при нулевом охвате событий не будет. Нули не являются реальными результатами.</p>
+  <% end %>
+  <div class="metric-grid" aria-label="Уникальные показатели локальной модели">
+    <article class="metric-card"><p>Локальные контакты</p><strong data-contacted-count><%= @metrics.contacted_count %></strong><span>Уникальные получатели со статусом simulated; исключённые, pending и failed не входят</span></article>
+    <article class="metric-card"><p>Моделируемые доставки</p><strong data-delivered-count><%= @metrics.delivered_count %></strong><span>Уникальные получатели с событием delivered</span><p>Доставки / контакты: <strong data-delivery-rate><%= @metrics.delivery_rate.nil? ? "—" : number_to_percentage(@metrics.delivery_rate, precision: 1, separator: ",") %></strong></p></article>
+    <article class="metric-card"><p>Моделируемые переходы</p><strong data-clicked-count><%= @metrics.clicked_count %></strong><span>Уникальные получатели с событием clicked</span><p>Переходы / доставки: <strong data-click-rate><%= @metrics.click_rate.nil? ? "—" : number_to_percentage(@metrics.click_rate, precision: 1, separator: ",") %></strong></p></article>
+  </div>
+  <p class="field-help">При нулевом знаменателе доля не определена (—). Показатели относятся ко всей кампании, не только к текущей странице получателей.</p>
+  <%= button_to(@metrics.event_count.zero? ? "Смоделировать события (v1)" : "Повторить моделирование (без дублей)", simulate_events_campaign_path(@campaign), class: "button button-secondary") %>
+</section>

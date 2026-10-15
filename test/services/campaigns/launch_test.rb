@@ -1,6 +1,8 @@
 require "test_helper"
+require_relative "../../test_helpers/campaign_analytics_helper"
 
 class CampaignsLaunchTest < ActiveSupport::TestCase
+  include CampaignAnalyticsHelper
   setup do
     @now = Time.utc(2026, 10, 21, 12)
     @campaign = Campaign.create!(user: users(:one), name: "Запуск", segment: "no_purchases", offer: "catalog_introduction", body: "Локальный пример", channel: "email", scheduled_at: @now - 1.day)
@@ -186,6 +188,36 @@ class CampaignsLaunchTest < ActiveSupport::TestCase
         Campaign.transaction(requires_new: true) { write.call }
       end
     end
+  end
+
+  test "new launch creates modeled events in the same transaction" do
+    assert defined?(CampaignEvent), "CampaignEvent must be implemented"
+    campaign = analytics_campaign(id: 830001, statuses: [], launched: false)
+    @customer.update!(external_id: "analytics-1")
+    campaign.confirm!(user: users(:one), version: campaign.lock_version)
+    travel_to(@now) { Campaigns::Launch.call(campaign: campaign) }
+    assert_equal [ "delivered" ], CampaignEvent.joins(:campaign_recipient).where(campaign_recipients: { campaign_id: campaign.id }).pluck(:event_type)
+    assert_equal @now + 113.seconds, CampaignEvent.sole.occurred_at
+  end
+
+  test "event storage failure rolls back the entire new launch including contacts" do
+    assert defined?(CampaignEvent), "CampaignEvent must be implemented"
+    campaign = analytics_campaign(id: 830001, statuses: [], launched: false)
+    @customer.update!(external_id: "analytics-1")
+    campaign.confirm!(user: users(:one), version: campaign.lock_version)
+    # Transactional test DDL is rolled back with the test, never installed in development.
+    Campaign.connection.execute(<<~SQL)
+      CREATE FUNCTION fail_test_event() RETURNS trigger LANGUAGE plpgsql AS $$
+      BEGIN RAISE EXCEPTION 'Test event storage failure'; END; $$;
+      CREATE TRIGGER fail_test_event BEFORE INSERT ON campaign_events
+        FOR EACH ROW EXECUTE FUNCTION fail_test_event();
+    SQL
+    assert_no_difference [ "CampaignRecipient.count", "CampaignEvent.count" ] do
+      assert_raises(ActiveRecord::StatementInvalid) { travel_to(@now) { Campaigns::Launch.call(campaign: campaign) } }
+    end
+    assert campaign.reload.draft?
+    assert_nil campaign.launched_at
+    assert_not_nil campaign.confirmed_at
   end
 
   private

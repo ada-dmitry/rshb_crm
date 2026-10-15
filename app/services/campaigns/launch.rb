@@ -34,6 +34,7 @@ module Campaigns
           delivery.call(recipient: recipient, at: at) if decision.eligible?
         end
         campaign.update!(status: "launched", launched_at: at)
+        EventSimulator.call(campaign: campaign)
       end
       campaign
     end

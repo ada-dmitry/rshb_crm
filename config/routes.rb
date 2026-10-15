@@ -8,6 +8,7 @@ Rails.application.routes.draw do
       get :preview, on: :member
       post :confirm, on: :member
       post :launch, on: :member
+      post :simulate_events, on: :member
     end
   end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

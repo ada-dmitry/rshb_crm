@@ -1,6 +1,7 @@
 class Customer < ApplicationRecord
   has_many :orders, dependent: :restrict_with_error
   has_many :consents, dependent: :destroy
+  has_many :campaign_recipients, dependent: :restrict_with_error
 
   normalizes :email, with: ->(value) { value.strip.downcase.presence }
   normalizes :phone, with: ->(value) { value.strip.presence }

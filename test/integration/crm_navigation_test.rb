@@ -90,7 +90,7 @@ class CrmNavigationTest < ActionDispatch::IntegrationTest
     assert_select "[data-order-id]", count: 3
   end
 
-  test "segment detail links to its customers and gives proposals but not a fake campaign endpoint" do
+  test "segment detail links to its customers gives proposals and opens draft constructor" do
     sign_in_as users(:one)
     get "/crm/segments/new_customers"
     assert_response :success
@@ -98,7 +98,7 @@ class CrmNavigationTest < ActionDispatch::IntegrationTest
     assert_select "[data-proposal]", count: 2
     assert_select "[data-segment-size]", "1"
     assert_select "a[href='/crm/customers?segment=new_customers']"
-    assert_select "button[disabled]", /Конструктор кампаний/
+    assert_select "a[href='/crm/campaigns/new?segment=new_customers']", text: /Создать черновик кампании/
     get "/crm/segments/sleeping"
     assert_select "[data-empty-state]", /В этом сегменте пока нет покупателей/
   end

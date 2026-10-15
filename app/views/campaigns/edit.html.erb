@@ -1,0 +1,6 @@
+<% content_for :title, "Редактирование черновика — CRM" %>
+<main id="main-content" class="page">
+  <p class="breadcrumbs"><%= link_to "Кампании", campaigns_path %> / <%= link_to @campaign.name, campaign_path(@campaign) %> / Изменение</p>
+  <h1>Редактирование черновика</h1><p class="muted">После сохранения охват будет рассчитан заново.</p>
+  <%= render "form" %>
+</main>

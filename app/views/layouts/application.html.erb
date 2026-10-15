@@ -34,6 +34,7 @@
           <nav aria-label="Основная навигация" class="main-nav">
             <%= link_to "Обзор", crm_path, aria: { current: controller_name == "dashboard" ? "page" : nil } %>
             <%= link_to "Покупатели", customers_path, aria: { current: controller_name == "customers" ? "page" : nil } %>
+            <%= link_to "Кампании", campaigns_path, aria: { current: controller_name == "campaigns" ? "page" : nil } %>
             <%= button_to "Выйти", session_path, method: :delete, class: "button button-quiet" %>
           </nav>
         <% end %>
@@ -42,6 +43,7 @@
     <% if authenticated? %>
       <div class="demo-banner" data-demo-banner><strong>Демонстрационный режим.</strong> Синтетические данные · реальные сообщения не отправляются.</div>
     <% end %>
+    <%= tag.div(flash[:notice], role: "status", class: "flash-notice") if flash[:notice] %>
     <%= yield %>
     <footer class="site-footer">Локальный прототип · одно хозяйство · решения подтверждает фермер</footer>
   </body>

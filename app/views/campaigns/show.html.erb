@@ -1,0 +1,28 @@
+<% content_for :title, "#{@campaign.name} — CRM" %>
+<main id="main-content" class="page">
+  <p class="breadcrumbs"><%= link_to "Кампании", campaigns_path %> / Карточка</p>
+  <div class="page-heading"><div><p class="eyebrow">Предварительный просмотр · <%= @campaign.draft? ? "черновик" : "запущена" %></p><h1><%= @campaign.name %></h1><p class="muted"><%= @segment_definitions.fetch(@campaign.segment).fetch("label") %> · <%= @campaign.channel %> · <%= @offer_definitions.fetch(@campaign.offer).fetch("title") %></p></div>
+    <% if @campaign.draft? %><%= link_to "Изменить черновик", edit_campaign_path(@campaign), class: "button button-secondary" %><% end %>
+  </div>
+  <%= render "shared/rfm_context" %>
+  <section class="panel"><h2>Текст сообщения</h2><p class="message-preview"><%= @campaign.body %></p><p class="muted">Планируемое время: <strong><%= crm_time(@campaign.scheduled_at) %></strong></p></section>
+  <div class="section-heading"><h2>Расчёт допустимого охвата</h2><%= link_to "Пересчитать охват ↻", preview_campaign_path(@campaign), class: "button button-secondary" %></div>
+  <p class="muted preview-context">Проверено: <%= crm_time(@preview.generated_at) %>. Лимит оценивается на <%= crm_time(@preview.evaluated_at) %>, один контакт за 7 дней по всем каналам.</p>
+  <section class="metric-grid" aria-label="Предварительный охват">
+    <article class="metric-card"><p>Кандидаты сегмента</p><strong data-candidate-count><%= @preview.candidate_count %></strong><span>Совпали с выбранным правилом RFM</span></article>
+    <article class="metric-card"><p>Допустимы по текущим данным</p><strong data-eligible-count><%= @preview.eligible_count %></strong><span>Контакт, согласие и лимит прошли проверку</span></article>
+    <article class="metric-card"><p>Исключены</p><strong data-excluded-count><%= @preview.excluded_count %></strong><span>Причины приведены для каждого кандидата</span></article>
+  </section>
+  <% if @preview.candidate_count.zero? %><div class="empty-state" data-empty-candidates><h2>В выбранном сегменте нет покупателей</h2><p>Проверьте сегмент, дату и окно анализа в черновике.</p></div>
+  <% elsif @preview.eligible_count.zero? %><div class="empty-state" data-zero-reach><h2>Охват равен нулю</h2><p>Все кандидаты исключены. Не обходите отказ или отсутствие согласия; причины указаны ниже.</p></div><% end %>
+  <% if @entries.any? %>
+    <div class="table-wrap" role="region" aria-label="Кандидаты и причины исключения" tabindex="0"><table><caption class="visually-hidden">Предварительная проверка кандидатов</caption><thead><tr><th scope="col">Покупатель</th><th scope="col">Контакт</th><th scope="col">Результат проверки</th></tr></thead><tbody>
+      <% @entries.each do |entry| %><tr data-candidate-id="<%= entry.customer.id %>"><td><%= link_to entry.customer.name, customer_path(entry.customer), class: "customer-name" %><small><%= entry.customer.external_id %></small></td><td><%= entry.contact || "Не указан" %></td><td>
+        <% if entry.eligible? %><span class="badge">Допустим в предварительном расчёте</span>
+        <% else %><ul class="exclusion-reasons"><% entry.reasons.each do |reason| %><li data-exclusion-reason="<%= reason %>"><%= Campaigns::Eligibility::REASON_LABELS.fetch(reason) %></li><% end %></ul><% end %>
+      </td></tr><% end %>
+    </tbody></table></div>
+    <%= render "shared/pagination", base_path: campaign_path(@campaign) %>
+  <% end %>
+  <aside class="notice"><strong>Это предварительный расчёт, не запуск.</strong> Получатели не фиксируются и частотный лимит не резервируется. Согласия и история могут измениться; при будущем запуске их нужно проверить повторно. Подтверждение и имитация отправки появятся на следующем этапе.</aside>
+</main>

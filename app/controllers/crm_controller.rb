@@ -12,10 +12,14 @@ class CrmController < ApplicationController
     end
 
     def paginate(scope)
-      @total_count = scope.count
+      prepare_pagination(scope.count)
+      scope.limit(20).offset((@page - 1) * 20)
+    end
+
+    def prepare_pagination(count)
+      @total_count = count
       @page_count = (@total_count / 20.0).ceil
       requested_page = Integer(params[:page].to_s, exception: false) || 1
       @page = requested_page.clamp(1, [ @page_count, 1 ].max)
-      scope.limit(20).offset((@page - 1) * 20)
     end
 end

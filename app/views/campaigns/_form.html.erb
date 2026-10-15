@@ -1,0 +1,25 @@
+<% labels = { name: "Название", segment: "Сегмент", offer: "Повод", body: "Текст сообщения", channel: "Канал", scheduled_at: "Время", reference_date: "Дата RFM", window_days: "Окно RFM" } %>
+<% if @campaign.errors.any? %>
+  <div class="form-errors" role="alert"><h2>Не удалось сохранить черновик</h2><ul>
+    <% @campaign.errors.each do |error| %><li><strong><%= labels.fetch(error.attribute, "Параметр") %>:</strong> <%= error.type == :blank ? "укажите значение" : error.type == :too_long ? "не более #{error.options[:count]} символов" : "некорректное значение" %></li><% end %>
+  </ul></div>
+<% end %>
+<%= form_with model: @campaign, class: "campaign-form" do |form| %>
+  <div class="panel form-panel"><h2>Предложение</h2>
+    <div class="field"><%= form.label :name, "Название кампании" %><%= form.text_field :name, required: true, maxlength: 120, aria: { invalid: @campaign.errors.include?(:name) } %></div>
+    <div class="form-columns">
+      <div class="field"><%= form.label :segment, "Сегмент покупателей" %><%= form.select :segment, @segment_definitions.map { |key, definition| [ definition.fetch("label"), key ] }, {}, required: true %></div>
+      <div class="field"><%= form.label :offer, "Повод для коммуникации" %><%= form.select :offer, @offer_definitions.map { |key, definition| [ definition.fetch("title"), key ] }, {}, required: true %></div>
+    </div>
+    <div class="field"><%= form.label :body, "Текст сообщения" %><%= form.text_area :body, required: true, maxlength: 2000, rows: 6, aria: { describedby: "message-help", invalid: @campaign.errors.include?(:body) } %><p id="message-help" class="field-help">До 2 000 символов. Не выдумывайте цены, наличие, сроки и предпочтения покупателя. Факты подтверждает фермер.</p></div>
+  </div>
+  <div class="panel form-panel"><h2>Канал и время</h2><div class="form-columns">
+    <div class="field"><%= form.label :channel, "Канал" %><%= form.select :channel, [ [ "Email", "email" ], [ "SMS", "sms" ] ], {}, required: true %></div>
+    <div class="field"><%= form.label :scheduled_at, "Планируемое время (UTC)" %><%= form.datetime_local_field :scheduled_at, value: @campaign.scheduled_at&.utc&.strftime("%Y-%m-%dT%H:%M"), required: true %></div>
+  </div><p class="field-help">Охват оценивается на это время. Это не автоматическая отправка: фонового планировщика нет.</p></div>
+  <div class="panel form-panel"><h2>Параметры сегментации</h2><div class="form-columns">
+    <div class="field"><%= form.label :reference_date, "Дата расчёта RFM (UTC)" %><%= form.date_field :reference_date, required: true %></div>
+    <div class="field"><%= form.label :window_days, "Окно анализа, дней" %><%= form.number_field :window_days, min: 1, max: 3650, step: 1, required: true %></div>
+  </div><p class="field-help">Сегмент пересчитывается по завершённым заказам в этом окне, включая дату расчёта. Изменение параметров меняет список кандидатов.</p></div>
+  <div class="segment-actions"><%= form.button "Сохранить черновик и рассчитать охват", type: "submit", class: "button button-primary" %><%= link_to "Отмена", @campaign.persisted? ? campaign_path(@campaign) : campaigns_path, class: "button button-secondary" %></div>
+<% end %>

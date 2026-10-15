@@ -25,6 +25,19 @@ code { overflow-wrap: anywhere; }
 .page { max-width: 1240px; margin: 0 auto; padding: 36px 32px 48px; }
 .sign-in { max-width: 520px; }
 .sign-in form { margin: 24px 0; }
+textarea { width: 100%; border: 1px solid #97afa1; border-radius: 9px; background: white; padding: 12px; color: var(--ink); font: inherit; resize: vertical; min-height: 150px; }
+.campaign-form { max-width: 900px; }
+.form-panel .field { margin-bottom: 20px; }
+.form-panel .field:last-child { margin-bottom: 0; }
+.form-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.field-help { color: var(--muted); font-size: .8rem; margin: 8px 0 0; }
+.form-errors { border: 1px solid #bb7b6f; border-radius: 12px; padding: 20px; background: #fff0ec; color: #792a20; margin-bottom: 24px; }
+[aria-invalid="true"] { border-color: #9e4032 !important; }
+.flash-notice { max-width: 1176px; margin: 20px auto 0; padding: 14px 20px; border-radius: 12px; background: #e1efdf; color: #235032; }
+.message-preview { white-space: pre-wrap; overflow-wrap: anywhere; border-left: 3px solid var(--border); padding-left: 16px; }
+.preview-context { font-size: .82rem; }
+.exclusion-reasons { margin: 0; padding-left: 18px; color: #8b3225; font-size: .8rem; }
+.proposal-link { display: inline-block; margin-top: 14px; font-size: .83rem; font-weight: 650; }
 .page-heading { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-bottom: 24px; }
 .page-heading > div { min-width: 0; }
 .page-heading p:last-child { margin-bottom: 0; }
@@ -110,7 +123,7 @@ td small { display: block; color: var(--muted); font-size: .73rem; margin-top: 3
 @media (max-width: 600px) {
   .page { padding: 26px 16px 36px; }
   .header-inner { padding: 16px; flex-wrap: wrap; gap: 12px; }
-  .main-nav { width: 100%; justify-content: space-between; gap: 12px; }
+  .main-nav { width: 100%; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
   .demo-banner { padding: 12px 16px; text-align: left; }
   .page-heading { align-items: flex-start; flex-direction: column; gap: 16px; }
   .metric-grid, .segment-grid, .consent-grid, .proposal-grid { grid-template-columns: minmax(0, 1fr); gap: 14px; }
@@ -126,5 +139,7 @@ td small { display: block; color: var(--muted); font-size: .73rem; margin-top: 3
   .notice { padding: 16px; }
   .segment-total { flex-direction: row; gap: 12px; align-items: center; }
   .segment-actions { flex-direction: column; }
+  .form-columns { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .flash-notice { margin: 16px 16px 0; }
   .site-footer { padding: 20px 16px; }
 }

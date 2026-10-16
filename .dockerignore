@@ -54,6 +54,8 @@
 /vendor/bundle/
 /.direnv/
 /.playwright-mcp/
+/.superpowers/
+/.ruby-lsp/
 /flake.nix
 /flake.lock
 /.pre-commit-config.yaml

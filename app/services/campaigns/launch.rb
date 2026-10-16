@@ -25,6 +25,9 @@ module Campaigns
           .select { |result| result.segment == campaign.segment }.map(&:customer_id)
         # Protect contact rows from concurrent edits while taking the snapshot.
         Customer.where(id: ids).order(:id).lock.load
+        # Hold all channels through commit: consent channel edits also serialize.
+        # Lock order is campaign, customers, then consents in stable ID order.
+        Consent.where(customer_id: ids).order(:customer_id, :id).lock.load
         Eligibility.for_customers(customer_ids: ids, channel: campaign.channel, at: at).each do |decision|
           recipient = campaign.campaign_recipients.create!(
             customer: decision.customer, channel: campaign.channel, contact: decision.contact,

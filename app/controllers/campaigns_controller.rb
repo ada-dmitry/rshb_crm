@@ -60,14 +60,14 @@ class CampaignsController < CrmController
 
   def launch
     Campaigns::Launch.call(campaign: @campaign)
-    redirect_to campaign_path(@campaign), notice: "Кампания запущена."
+    redirect_to campaign_path(@campaign), notice: "Локальная симуляция кампании завершена. Реальные сообщения не отправлялись."
   rescue Campaigns::Launch::NotReady => error
     launch_rejected(error)
   end
 
   def simulate_events
     Campaigns::EventSimulator.call(campaign: @campaign)
-    redirect_to campaign_path(@campaign), notice: "Аналитика кампании рассчитана."
+    redirect_to campaign_path(@campaign), notice: "Моделирование событий выполнено. Реальные действия покупателей не учитываются."
   rescue ArgumentError
     flash.now[:alert] = "Сначала запустите кампанию."
     load_preview

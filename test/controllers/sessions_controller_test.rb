@@ -20,6 +20,10 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to new_session_path
     assert_nil cookies[:session_id]
+    follow_redirect!
+    assert_select '[role="alert"]', text: "Неверная почта или пароль.", count: 1
+    get new_session_path
+    assert_select '[role="alert"]', count: 0
   end
 
   test "destroy" do

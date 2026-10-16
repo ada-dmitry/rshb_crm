@@ -1,13 +1,14 @@
 <section class="panel" data-simulated-analytics aria-labelledby="analytics-heading">
-  <h2 id="analytics-heading">Аналитика кампании</h2>
+  <h2 id="analytics-heading">Моделируемая аналитика</h2>
+  <p data-simulation-disclaimer>Доставки и переходы сгенерированы для демонстрации. Это не действия покупателей и не прогноз продаж.</p>
   <% if @metrics.event_count.zero? %>
-    <p class="notice" data-no-modeled-events>Событий аналитики пока нет. Рассчитайте аналитику кнопкой ниже.</p>
+    <p class="notice" data-no-modeled-events>Моделируемых событий пока нет. Выполните моделирование кнопкой ниже; при нулевом охвате события не появятся.</p>
   <% end %>
   <div class="metric-grid" aria-label="Показатели кампании">
-    <article class="metric-card"><p>Контакты</p><strong data-contacted-count><%= @metrics.contacted_count %></strong><span>Уникальные получатели кампании</span></article>
-    <article class="metric-card"><p>Доставки</p><strong data-delivered-count><%= @metrics.delivered_count %></strong><span>Уникальные получатели с событием delivered</span><p class="stat-extra">Доставки / контакты: <strong data-delivery-rate><%= @metrics.delivery_rate.nil? ? "—" : number_to_percentage(@metrics.delivery_rate, precision: 1, separator: ",") %></strong></p></article>
-    <article class="metric-card"><p>Переходы</p><strong data-clicked-count><%= @metrics.clicked_count %></strong><span>Уникальные получатели с событием clicked</span><p class="stat-extra">Переходы / доставки: <strong data-click-rate><%= @metrics.click_rate.nil? ? "—" : number_to_percentage(@metrics.click_rate, precision: 1, separator: ",") %></strong></p></article>
+    <article class="metric-card"><p>Моделируемые контакты</p><strong data-contacted-count><%= @metrics.contacted_count %></strong><span>Уникальные получатели кампании</span></article>
+    <article class="metric-card"><p>Моделируемые доставки</p><strong data-delivered-count><%= @metrics.delivered_count %></strong><span>Уникальные получатели с событием delivered</span><p class="stat-extra">Доставки / контакты: <strong data-delivery-rate><%= @metrics.delivery_rate.nil? ? "—" : number_to_percentage(@metrics.delivery_rate, precision: 1, separator: ",") %></strong></p></article>
+    <article class="metric-card"><p>Моделируемые переходы</p><strong data-clicked-count><%= @metrics.clicked_count %></strong><span>Уникальные получатели с событием clicked</span><p class="stat-extra">Переходы / доставки: <strong data-click-rate><%= @metrics.click_rate.nil? ? "—" : number_to_percentage(@metrics.click_rate, precision: 1, separator: ",") %></strong></p></article>
   </div>
   <p class="field-help">Показатели относятся ко всей кампании, а не только к текущей странице получателей.</p>
-  <%= button_to(@metrics.event_count.zero? ? "Рассчитать аналитику" : "Пересчитать аналитику", simulate_events_campaign_path(@campaign), class: "button button-secondary") %>
+  <%= button_to(@metrics.event_count.zero? ? "Смоделировать события" : "Повторить моделирование событий", simulate_events_campaign_path(@campaign), class: "button button-secondary") %>
 </section>

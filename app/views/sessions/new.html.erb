@@ -1,6 +1,5 @@
 <main id="main-content" class="page sign-in">
   <h1>Вход фермера</h1>
-  <%= tag.p(flash[:alert], role: "alert") if flash[:alert] %>
   <%= form_with url: session_path do |form| %>
     <p>
       <%= form.label :email_address, "Электронная почта" %>

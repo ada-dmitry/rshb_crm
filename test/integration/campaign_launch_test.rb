@@ -25,13 +25,16 @@ class CampaignLaunchTest < ActionDispatch::IntegrationTest
     sign_in_as users(:two)
     assert_respond_to @campaign, :lock_version
     get campaign_path(@campaign)
+    assert_select "[data-demo-mode]", text: "Деморежим: данные синтетические. Email и SMS не отправляются."
     assert_select "form[action='#{confirm_campaign_path(@campaign)}']"
     post confirm_campaign_path(@campaign)
     assert_response :conflict
+    assert_select '[role="alert"]', text: "Черновик изменился. Проверьте текущую версию и подтвердите её заново.", count: 1
     stale_version = @campaign.lock_version
     @campaign.update!(body: "Новая версия")
     post confirm_campaign_path(@campaign), params: { version: stale_version }
     assert_response :conflict
+    assert_select '[role="alert"]', text: "Черновик изменился. Проверьте текущую версию и подтвердите её заново.", count: 1
     assert_nil @campaign.reload.confirmed_at
     at = Time.utc(2026, 10, 22, 12)
     travel_to at do
@@ -46,11 +49,15 @@ class CampaignLaunchTest < ActionDispatch::IntegrationTest
     sign_in_as users(:one)
     post "/crm/campaigns/#{@campaign.id}/launch", params: { confirmed_at: Time.current, confirmed_by_id: users(:one).id }
     assert_response :unprocessable_content
+    assert_select '[role="alert"]', text: "Подтвердите текущую версию черновика.", count: 1
     assert_nil @campaign.reload.confirmed_at
     @campaign.update!(scheduled_at: 1.hour.from_now)
     confirm
+    get campaign_path(@campaign)
+    assert_select "form[action='#{launch_campaign_path(@campaign)}'] button", text: "Запустить локальную симуляцию"
     post launch_campaign_path(@campaign)
     assert_response :unprocessable_content
+    assert_select '[role="alert"]', text: "Планируемое время ещё не наступило.", count: 1
     patch campaign_path(@campaign), params: { campaign: { body: "Изменено", lock_version: @campaign.reload.lock_version } }
     assert_redirected_to campaign_path(@campaign)
     assert_nil @campaign.reload.confirmed_at
@@ -68,6 +75,8 @@ class CampaignLaunchTest < ActionDispatch::IntegrationTest
       get path
       assert_response :success
       assert_select "[data-launch-result]"
+      assert_select "[data-launch-result] h2", "Результат локальной симуляции"
+      assert_select "[data-demo-mode]", text: "Деморежим: данные синтетические. Email и SMS не отправляются."
       assert_select "[data-eligible-count]", "1"
       assert_select "td", text: /snapshot@example.com/
       assert_select "a", text: "Имя на момент запуска"
@@ -92,6 +101,7 @@ class CampaignLaunchTest < ActionDispatch::IntegrationTest
     confirm
     patch campaign_path(@campaign), params: { campaign: { body: "Устаревшее", lock_version: version } }
     assert_response :conflict
+    assert_select '[role="alert"]', text: "Черновик изменился. Проверьте текущую версию и подтвердите её заново.", count: 1
     assert_equal "Симуляция", @campaign.reload.body
     assert_not_nil @campaign.confirmed_at
   end

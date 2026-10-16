@@ -22,6 +22,7 @@ class CampaignAnalyticsTest < ActionDispatch::IntegrationTest
     assert_select "form[action*='simulate_events']", count: 0
     post "/crm/campaigns/#{draft.id}/simulate_events"
     assert_response :unprocessable_content
+    assert_select '[role="alert"]', text: "Сначала запустите кампанию.", count: 1
     assert_equal 0, CampaignEvent.count
   end
 
@@ -31,7 +32,9 @@ class CampaignAnalyticsTest < ActionDispatch::IntegrationTest
     [ campaign_path(@campaign), preview_campaign_path(@campaign) ].each do |path|
       get path
       assert_response :success
-      assert_select "[data-simulated-analytics]", /Аналитика кампании/
+      assert_select "[data-simulated-analytics] h2", "Моделируемая аналитика"
+      assert_select "[data-simulation-disclaimer]", "Доставки и переходы сгенерированы для демонстрации. Это не действия покупателей и не прогноз продаж."
+      assert_select "form[action*='simulate_events'] button", "Смоделировать события"
       assert_select "[data-no-modeled-events]"
       assert_select "[data-contacted-count]", "12"
       assert_select "[data-delivered-count]", "0"
@@ -50,7 +53,12 @@ class CampaignAnalyticsTest < ActionDispatch::IntegrationTest
     assert_redirected_to campaign_path(@campaign)
     follow_redirect!
     assert_select "[data-no-modeled-events]", count: 0
-    assert_select "[data-simulated-analytics]", /Аналитика кампании/
+    assert_select "[data-simulated-analytics] h2", "Моделируемая аналитика"
+    assert_select "[data-simulation-disclaimer]", "Доставки и переходы сгенерированы для демонстрации. Это не действия покупателей и не прогноз продаж."
+    assert_select "form[action*='simulate_events'] button", "Повторить моделирование событий"
+    %w[контакты доставки переходы].each do |metric|
+      assert_select "[data-simulated-analytics] .metric-card p", text: "Моделируемые #{metric}"
+    end
     assert_select "[data-contacted-count]", "12"
     assert_select "[data-delivered-count]", "11"
     assert_select "[data-clicked-count]", "2"
@@ -80,6 +88,8 @@ class CampaignAnalyticsTest < ActionDispatch::IntegrationTest
       assert_select "[data-delivery-rate]", "—"
       assert_select "[data-click-rate]", "—"
       assert_select "[data-no-modeled-events]"
+      assert_select "[data-simulation-disclaimer]"
+      assert_select "[data-no-modeled-events]", /при нулевом охвате события не появятся/
     end
   end
 

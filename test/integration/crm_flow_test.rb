@@ -92,7 +92,9 @@ class CrmFlowTest < ActionDispatch::IntegrationTest
           assert_response :success
           assert_select "[data-launch-result]"
           assert_select "[data-eligible-count]", "12"
-          assert_select "[data-simulated-analytics]", /Аналитика кампании/
+          assert_select "[data-simulated-analytics]", /Моделируемая аналитика/
+          assert_select "[data-demo-mode]"
+          assert_select "[data-simulation-disclaimer]"
           assert_select "[data-contacted-count]", "12"
           assert_select "[data-delivered-count]", delivered.to_s
           assert_select "[data-clicked-count]", clicked.to_s

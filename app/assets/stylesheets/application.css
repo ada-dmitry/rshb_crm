@@ -121,6 +121,10 @@ textarea { width: 100%; border: 1px solid var(--border); border-radius: 4px; bac
 .skip-link:focus { top: 12px; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
+/* Кредиты */
+.site-footer { padding: 16px 24px 24px; border-top: 1px solid var(--border-soft); color: var(--muted); text-align: center; }
+.site-footer small { font-size: .8rem; }
+
 /* Стат-блоки */
 .metric-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 32px; margin: 18px 0 26px; }
 .metric-card { border-top: 1px solid var(--ink); padding-top: 8px; }

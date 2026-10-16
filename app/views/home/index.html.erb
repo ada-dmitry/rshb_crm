@@ -1,6 +1,8 @@
 <main id="main-content" class="page">
   <h1>CRM возврата покупателей</h1>
   <p>Стартовая страница приложения. CRM для возврата покупателей фермерского хозяйства.</p>
-  <%= link_to "Войти", new_session_path %>
-  <%= link_to "Открыть CRM", crm_path %>
+  <div class="home-actions">
+    <%= link_to "Войти", new_session_path, class: "button button-primary" %>
+    <%= link_to "Открыть CRM", crm_path, class: "button button-secondary" %>
+  </div>
 </main>

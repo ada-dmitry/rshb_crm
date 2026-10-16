@@ -25,10 +25,7 @@ module Demo
     private
       def seed_customer(number)
         customer = Customer.find_or_create_by!(external_id: format("demo-customer-%03d", number)) do |record|
-          record.name = format("Демо-покупатель %03d", number)
-          record.email = format("customer%03d@example.com", number) unless number % 7 == 0
-          # Deliberately non-routable contact, not a real subscriber's number.
-          record.phone = format("demo-phone-%03d", number) unless number % 9 == 0
+          record.assign_attributes(CustomerAttributes.call(number: number))
         end
 
         Consent::CHANNELS.each_with_index do |channel, index|

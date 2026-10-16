@@ -20,6 +20,43 @@ class DemoSeedTest < ActiveSupport::TestCase
     assert Consent.exists?(granted: false)
     assert Consent.exists?(granted: true)
     assert_equal [ "email", "sms" ], Consent.distinct.order(:channel).pluck(:channel)
+    assert_equal Demo::CustomerAttributes.call(number: 1).stringify_keys,
+      Customer.find_by!(external_id: "demo-customer-001").attributes.slice("name", "email", "phone")
+  end
+
+  test "restores a deleted customer with identical contacts without changing surviving rows" do
+    Demo::Seed.call
+    customer = Customer.find_by!(external_id: "demo-customer-010")
+    original_contacts = customer.attributes.slice("name", "email", "phone")
+    original_business_data = business_snapshot
+    customer.destroy!
+    before = database_snapshot
+
+    assert_difference "Customer.count", 1 do
+      Demo::Seed.call
+    end
+    assert_equal original_contacts, Customer.find_by!(external_id: "demo-customer-010").attributes.slice("name", "email", "phone")
+    assert_equal original_business_data, business_snapshot
+    before.each do |model, rows|
+      assert_equal rows, model.where(id: rows.map { |row| row.fetch("id") }).order(:id).map(&:attributes)
+    end
+  end
+
+  test "preserves existing legacy placeholder contacts" do
+    customer = Customer.create!(external_id: "demo-customer-001", name: "Демо-покупатель 001",
+      email: "customer001@example.com", phone: "demo-phone-001")
+    before = customer.attributes
+    Demo::Seed.call
+    assert_equal before, customer.reload.attributes
+  end
+
+  test "SMS eligibility includes recipients and explains missing invalid and refused contacts" do
+    Demo::Seed.call
+    decisions = Campaigns::Eligibility.for_customers(customer_ids: Customer.ids, channel: "sms", at: Demo::Seed::REFERENCE_TIME)
+    assert decisions.any?(&:eligible?)
+    %w[missing_contact invalid_contact refused].each do |reason|
+      assert decisions.any? { |decision| decision.reasons.include?(reason) }, "Missing exclusion: #{reason}"
+    end
   end
 
   test "reloading preserves every existing row including edited contacts purchases refusals and sessions" do
